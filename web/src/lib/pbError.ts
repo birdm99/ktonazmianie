@@ -1,5 +1,17 @@
 import { ClientResponseError } from "pocketbase";
 
+function debugPayload(err: ClientResponseError): string | null {
+  try {
+    const data = (err.response as Record<string, unknown> | undefined)?.data ?? err.data;
+    if (data && typeof data === "object" && Object.keys(data as object).length > 0) {
+      return JSON.stringify(data);
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
 function fieldErrors(data: Record<string, unknown>): string | null {
   const parts: string[] = [];
   for (const [key, val] of Object.entries(data)) {
@@ -32,15 +44,17 @@ export function formatPbError(err: unknown, fallback: string): string {
   if (msg === "Failed to authenticate." || msg === "Failed to create record.") {
     const origin =
       typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "";
-    return [
-      "Logowanie OIDC nie powiodło się (PocketBase).",
+    const dbg = debugPayload(err as ClientResponseError);
+    const parts = [
+      "Logowanie OIDC nie powiodło się (PocketBase, ~60 B = po udanym tokenie z IdP).",
+      "Najczęstsze: wyłączona rejestracja (users → Create rule / Settings → signup) lub brak email (Authentik email_verified).",
       origin
-        ? `Sprawdź: Application URL = ${origin}; Authentik redirect = ${origin}/oauth2-callback.`
-        : "Sprawdź Application URL i redirect /oauth2-callback w Authentik.",
-      "Authentik: własny scope „email” z email_verified: True (domyślny od 2025.10 ma false).",
-      "Serwer: docker compose build pocketbase && docker compose up -d pocketbase (hook oauth_users).",
-      "Logi: docker logs ktonazmianie-pocketbase --tail 50",
-    ].join(" ");
+        ? `Application URL = ${origin}, redirect Authentik = ${origin}/oauth2-callback.`
+        : undefined,
+      "Na serwerze: ./scripts/verify-pocketbase-hooks.sh && docker compose build --no-cache pocketbase && docker compose up -d pocketbase",
+      dbg ? `Szczegóły API: ${dbg}` : undefined,
+    ].filter(Boolean);
+    return parts.join(" ");
   }
   if (msg && msg !== "Something went wrong while processing your request.") {
     return msg;

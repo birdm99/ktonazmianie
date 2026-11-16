@@ -44,9 +44,10 @@ export function OidcCallbackPage() {
           code,
           verifier,
           redirectUri,
-          { role: "employee" },
-          { expand: "calendar" }
+          { role: "employee" }
         );
+        if (cancelled) return;
+        await pb.collection("users").authRefresh({ expand: "calendar" });
         if (cancelled) return;
         const returnTo = sessionStorage.getItem(OIDC_RETURN_KEY) || "/";
         sessionStorage.removeItem(OIDC_RETURN_KEY);

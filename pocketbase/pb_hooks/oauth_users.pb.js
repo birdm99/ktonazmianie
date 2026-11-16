@@ -131,3 +131,5 @@ onRecordCreateRequest((e) => {
 
   e.next();
 }, "users");
+
+console.log("[oauth_users] hooks registered");

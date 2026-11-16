@@ -1,0 +1,9 @@
+.env
+.env.local
+.env.*.local
+node_modules/
+web/node_modules/
+web/dist/
+pocketbase/pb_data/
+*.log
+.DS_Store

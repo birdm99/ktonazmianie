@@ -1,0 +1,49 @@
+# Produkcja / serwer: build frontu w obrazie web, bez Node na hoście.
+# Lokalny dev (montowanie web/dist): docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+services:
+  pocketbase:
+    build: ./pocketbase
+    container_name: ktonazmianie-pocketbase
+    restart: unless-stopped
+    volumes:
+      - pocketbase_data:/pb_data
+    ports:
+      - "127.0.0.1:${PB_PORT:-8091}:8090"
+    networks:
+      - ktonazmianie
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8090/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  web:
+    build:
+      context: ./web
+      args:
+        VITE_PB_URL: ${VITE_PB_URL:-}
+        VITE_OIDC_ENABLED: ${VITE_OIDC_ENABLED:-true}
+    image: ktonazmianie-web:local
+    container_name: ktonazmianie-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8080}:80"
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+    networks:
+      - ktonazmianie
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+
+volumes:
+  pocketbase_data:
+
+networks:
+  ktonazmianie:

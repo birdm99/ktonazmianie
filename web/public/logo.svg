@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Kto na zmianie">
+  <rect width="120" height="120" rx="20" fill="#0284c7"/>
+  <rect x="22" y="28" width="76" height="68" rx="8" fill="#fff"/>
+  <rect x="22" y="28" width="76" height="18" rx="8" fill="#e0f2fe"/>
+  <circle cx="38" cy="37" r="3" fill="#0284c7"/>
+  <circle cx="48" cy="37" r="3" fill="#0284c7"/>
+  <rect x="30" y="54" width="14" height="12" rx="3" fill="#bae6fd"/>
+  <rect x="48" y="54" width="14" height="12" rx="3" fill="#7dd3fc"/>
+  <rect x="66" y="54" width="14" height="12" rx="3" fill="#38bdf8"/>
+  <rect x="30" y="72" width="14" height="12" rx="3" fill="#e0f2fe"/>
+  <rect x="48" y="72" width="14" height="12" rx="3" fill="#0284c7"/>
+  <rect x="66" y="72" width="14" height="12" rx="3" fill="#bae6fd"/>
+</svg>

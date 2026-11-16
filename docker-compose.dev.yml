@@ -1,0 +1,5 @@
+# Nadpisania pod rozwój lokalny: montuj gotowy web/dist z hosta (npm run build).
+services:
+  web:
+    volumes:
+      - ./web/dist:/usr/share/nginx/html:ro

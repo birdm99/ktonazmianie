@@ -30,10 +30,17 @@ export function formatPbError(err: unknown, fallback: string): string {
   const msg =
     (typeof raw?.message === "string" ? raw.message : undefined) ?? err.message;
   if (msg === "Failed to authenticate.") {
+    const origin =
+      typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "";
+    const appUrlHint = origin
+      ? `W panelu PB ustaw Application URL na ${origin} (bez /api). `
+      : "";
     return (
       "Logowanie OIDC nie powiodło się (PocketBase 400). " +
-      "Sprawdź: Application URL = publiczna domena, redirect w Authentik, " +
-      "scope email z email_verified, provider „oidc” w PB, oraz docker logs pocketbase."
+      appUrlHint +
+      "Sprawdź redirect w Authentik ({domena}/api/oauth2-redirect), scope email z email_verified: true, " +
+      "oraz: docker logs ktonazmianie-pocketbase --tail 50. " +
+      "Na serwerze: APP_URL=… ./scripts/fix-pb-app-url.sh superuser@mail haslo"
     );
   }
   if (msg && msg !== "Something went wrong while processing your request.") {

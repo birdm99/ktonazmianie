@@ -16,7 +16,6 @@ load_deployment_env() {
   WEB_PORT="${WEB_PORT:-8080}"
   PB_PORT="${PB_PORT:-8091}"
 
-  VITE_PB_URL="${VITE_PB_URL:-}"
   VITE_OIDC_ENABLED="${VITE_OIDC_ENABLED:-true}"
 
   # Jeden publiczny adres aplikacji (HTTPS, bez /api). Opcjonalny — puste = działa na każdym hoście.
@@ -28,6 +27,12 @@ load_deployment_env() {
     APP_URL=""
   fi
   export APP_URL PB_PUBLIC_URL="${PB_PUBLIC_URL:-$APP_URL}"
+
+  # OIDC: jawny origin w buildzie frontu, gdy znasz domenę (inaczej window.location.origin).
+  if [[ -z "${VITE_PB_URL:-}" && -n "$APP_URL" ]]; then
+    VITE_PB_URL="$APP_URL"
+  fi
+  VITE_PB_URL="${VITE_PB_URL:-}"
 
   export WEB_BIND WEB_PORT PB_PORT VITE_PB_URL VITE_OIDC_ENABLED
   export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ktonazmianie}"

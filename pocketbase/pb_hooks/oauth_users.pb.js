@@ -73,8 +73,8 @@ onRecordAuthWithOAuth2Request((e) => {
       }
     }
   } catch (err) {
+    // Nie przerywaj OAuth — inaczej PB zwraca ogólne „Failed to authenticate.”
     console.error("oauth_users onRecordAuthWithOAuth2Request:", err);
-    throw new BadRequestError("OIDC: nie udało się uzupełnić profilu użytkownika.", err);
   }
   e.next();
 }, "users");

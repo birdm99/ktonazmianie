@@ -35,6 +35,16 @@ check() {
 if [[ -n "$DOMAIN" ]]; then
   check "https://${DOMAIN}/api/health" "Health przez publiczną domenę"
   check "https://${DOMAIN}/api/collections/users/auth-methods" "Auth methods (czy oauth2/oidc włączone)"
+  methods="$(curl -sS --connect-timeout 5 "https://${DOMAIN}/api/collections/users/auth-methods" 2>/dev/null || echo "")"
+  if echo "$methods" | grep -q '"enabled":true' && echo "$methods" | grep -q '"name":"oidc"'; then
+  echo "Provider oidc: włączony"
+  elif echo "$methods" | grep -q oauth2; then
+  echo "UWAGA: oauth2 bez providera 'oidc' w odpowiedzi"
+  fi
+  if echo "$methods" | grep -q 'redirect_uri=$'; then
+  echo "Puste redirect_uri w authURL jest normalne (SDK dokleja URL przy logowaniu)."
+  echo "KRYTYCZNE: PB Settings → Application URL = https://${DOMAIN}"
+  fi
 else
   check "http://127.0.0.1:${WEB_PORT}/api/health" "Health lokalnie (nginx)"
   check "http://127.0.0.1:${WEB_PORT}/api/collections/users/auth-methods" "Auth methods"

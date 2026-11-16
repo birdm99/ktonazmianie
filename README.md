@@ -149,6 +149,13 @@ Ogólny komunikat z `auth-with-oauth2` (w DevTools często bez szczegółów w `
 
 Na serwerze: `./scripts/diagnose-oidc.sh twoja-domena.pl` oraz `docker logs ktonazmianie-pocketbase --tail 80`.
 
+Ustawienie **Application URL** bez panelu (SSH, tunel na PB_PORT):
+
+```bash
+# W .env: APP_URL=https://grafik.firma.pl
+./scripts/fix-pb-app-url.sh admin@twoja-domena.pl 'haslo-superusera'
+```
+
 [Wytyczna integracji Authentik ↔ PocketBase](https://integrations.goauthentik.io/platforms/pocketbase/)
 
 ## Wdrożenie na serwerze

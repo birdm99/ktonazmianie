@@ -12,6 +12,7 @@ Szczegółowy opis funkcji i UI: sekcja „Opis” poniżej (pochodzi z pierwotn
 
 ```bash
 ./scripts/deploy.sh
+# albo: bash scripts/deploy.sh   (na Ubuntu `sh` = dash — też działa po poprawce w skrypcie)
 ```
 
 Skrypt sam utworzy `.env` z domyślniami, zbuduje obrazy (front w Dockerze), podniesie stack i sprawdzi `/api/health`.
@@ -110,15 +111,28 @@ Domyślnie działa logowanie **e-mail + hasło**. SSO włączasz tylko gdy potrz
 
    Przy jednej domenie za reverse proxy (prod): np. `https://kalendarz.firma.pl/api/oauth2-redirect`
 
-2. W panelu PocketBase: **Collections → users → OAuth2** → dodaj provider **OIDC** z **nazwą `oidc`** (frontend woła `authWithOAuth2({ provider: "oidc" })`). Wklej Auth / Token / Userinfo URL z Authentik oraz Client ID i secret.
+2. W panelu PocketBase: **Collections → users → OAuth2** → dodaj provider **OIDC** z **nazwą `oidc`** (frontend woła `authWithOAuth2({ provider: "oidc" })`). Wklej Auth / Token / Userinfo URL z Authentik oraz Client ID i secret. W scope’ach providera zaznacz m.in. **openid**, **profile**, **email** (żeby userinfo zwracało m.in. `given_name`, `family_name`, `email`).
 
-3. Ustaw `VITE_OIDC_ENABLED=true` i przebuduj obraz `web`:
+3. **Authentik (ważne od wersji 2025.10):** domyślny scope `email` wysyła `email_verified: false`, a PocketBase **nie** przypisuje wtedy pola `email` (stąd błąd walidacji przy pierwszym logowaniu). Zrób własne **Scope mapping** (Customization → Property Mappings) ze scope `email` i wyrażeniem, które pasuje do Twojej polityki weryfikacji adresów, np.:
+
+   ```python
+   return {
+       "email": request.user.email,
+       "email_verified": True,
+   }
+   ```
+
+   Podłącz to mapowanie do providera OAuth aplikacji **zamiast** domyślnego mapowania `email` (nie oba naraz). Szczegóły: [Verify email addresses](https://docs.goauthentik.io/add-secure-apps/providers/oauth2/verify-email-address/).
+
+   Pola `firstName`, `lastName` i domyślna rola `employee` przy pierwszym logowaniu OIDC uzupełnia hook `pocketbase/pb_hooks/oauth_users.pb.js` z claimów OIDC (`given_name`, `family_name`, `name`, e-mail). Po zmianie hooków przebuduj i zrestartuj kontener PocketBase.
+
+4. Ustaw `VITE_OIDC_ENABLED=true` i przebuduj obraz `web`:
 
    ```bash
    docker compose build web && docker compose up -d
    ```
 
-4. W PocketBase **Settings → Application** ustaw **Application URL** na publiczny adres API (spójny z redirect URI).
+5. W PocketBase **Settings → Application** ustaw **Application URL** na publiczny adres API (spójny z redirect URI).
 
 [Wytyczna integracji Authentik ↔ PocketBase](https://integrations.goauthentik.io/platforms/pocketbase/)
 

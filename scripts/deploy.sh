@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Jedno wdrożenie na dowolnym serwerze: .env z domyślniami, build w Docker, healthcheck.
+if [ -z "${BASH_VERSION:-}" ]; then exec env bash "$0" "$@"; fi
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

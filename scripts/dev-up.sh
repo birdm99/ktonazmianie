@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Lokalny dev: PocketBase + web z montowanym web/dist (wymaga wcześniejszego npm run build lub ./scripts/redeploy-web.sh).
+if [ -z "${BASH_VERSION:-}" ]; then exec env bash "$0" "$@"; fi
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

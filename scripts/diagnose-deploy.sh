@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Diagnostyka wdrożenia: Docker → porty → NPM → (opcjonalnie) Cloudflare
 # Uruchom NA SERWERZE w katalogu projektu: ./scripts/diagnose-deploy.sh [domena]
+if [ -z "${BASH_VERSION:-}" ]; then exec env bash "$0" "$@"; fi
 
 set -uo pipefail
 

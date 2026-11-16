@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "./features/auth/ProtectedRoute";
 import { LoginPage } from "./features/auth/LoginPage";
+import { OidcCallbackPage } from "./features/auth/OidcCallbackPage";
 import { CalendarPage } from "./features/calendar/CalendarPage";
 import { SettingsPage } from "./features/settings/SettingsPage";
 import { AdminLayout } from "./features/admin/AdminLayout";
@@ -13,6 +14,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/oauth2-callback" element={<OidcCallbackPage />} />
       <Route
         path="/"
         element={

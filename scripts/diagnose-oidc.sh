@@ -60,7 +60,7 @@ fi
 echo
 echo "Checklista „Failed to authenticate”:"
 echo "  1) PB Settings → Application URL = https://twoja-domena (bez /api)"
-echo "  2) Authentik redirect (Strict): https://twoja-domena/api/oauth2-redirect"
+echo "  2) Authentik redirect (Strict): https://twoja-domena/oauth2-callback (oraz opcjonalnie …/api/oauth2-redirect)"
 echo "  3) Provider w PB: nazwa dokładnie „oidc”, scope openid profile email"
 echo "  4) Authentik: własny scope email z email_verified: True (2025.10+)"
 echo "  5) Po zmianie hooków: docker compose build pocketbase && docker compose up -d pocketbase"

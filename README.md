@@ -103,9 +103,10 @@ VITE_OIDC_ENABLED=false
 
 Domyślnie działa logowanie **e-mail + hasło**. SSO włączasz tylko gdy potrzebujesz.
 
-1. W **Authentik** utwórz aplikację OAuth2/OIDC z redirect URI:
+1. W **Authentik** utwórz aplikację OAuth2/OIDC z redirect URI (Strict, Authorization) — **oba** adresy:
 
-   `{PB_PUBLIC_URL}/api/oauth2-redirect`
+   - `{APP_URL}/oauth2-callback` — używany przez aplikację (manual code exchange; nie zależy od realtime PocketBase)
+   - opcjonalnie `{APP_URL}/api/oauth2-redirect` — wbudowany flow PB (przy jednej domenie za nginx zwykle nie działa, bo PB przekierowuje na `/_/` panelu)
 
    Przy osobnym porcie API (domyślny dev): `http://127.0.0.1:8091/api/oauth2-redirect`
 

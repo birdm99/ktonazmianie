@@ -59,4 +59,4 @@ print(json.dumps({
 ')" | python3 -c "import json,sys; d=json.load(sys.stdin); print('appUrl:', (d.get('meta') or {}).get('appUrl'))"
 
 echo "OK — Application URL = ${APP_URL}"
-echo "Redirect w Authentik: ${APP_URL}/api/oauth2-redirect"
+echo "Redirect w Authentik: ${APP_URL}/oauth2-callback"

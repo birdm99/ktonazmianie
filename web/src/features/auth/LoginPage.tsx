@@ -40,8 +40,7 @@ export function LoginPage() {
     setError(null);
     setBusy(true);
     try {
-      await loginWithOidc();
-      navigate(from, { replace: true });
+      await loginWithOidc(from);
     } catch (err) {
       setError(formatPbError(err, OIDC_FALLBACK));
       console.error(err);

@@ -8,13 +8,14 @@ import {
   type ReactNode,
 } from "react";
 import { pb } from "@/lib/pocketbase";
+import { buildOidcAuthUrl, OIDC_RETURN_KEY, OIDC_VERIFIER_KEY, oidcRedirectUri } from "@/lib/oidc";
 import type { User } from "@/lib/types";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  loginWithOidc: () => Promise<void>;
+  loginWithOidc: (returnTo?: string) => Promise<void>;
   logout: () => void;
   refresh: () => Promise<void>;
 }
@@ -53,12 +54,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(auth.record);
   }, []);
 
-  const loginWithOidc = useCallback(async () => {
-    await pb.collection("users").authWithOAuth2({
-      provider: "oidc",
-      createData: { role: "employee" },
-    });
-    setUser(pb.authStore.record as User);
+  const loginWithOidc = useCallback(async (returnTo = "/") => {
+    const methods = await pb.collection("users").listAuthMethods();
+    const provider = methods.oauth2?.providers?.find((p) => p.name === "oidc");
+    if (!provider?.authURL || !provider.codeVerifier) {
+      throw new Error('Brak providera „oidc” w PocketBase (users → OAuth2).');
+    }
+
+    const redirectUri = oidcRedirectUri();
+    sessionStorage.setItem(OIDC_VERIFIER_KEY, provider.codeVerifier);
+    sessionStorage.setItem(OIDC_RETURN_KEY, returnTo);
+    window.location.assign(buildOidcAuthUrl(provider.authURL, redirectUri));
   }, []);
 
   const logout = useCallback(() => {

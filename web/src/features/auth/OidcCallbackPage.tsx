@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { pb } from "@/lib/pocketbase";
+import { ClientResponseError } from "pocketbase";
 import { formatPbError } from "@/lib/pbError";
 import {
   OIDC_RETURN_KEY,
@@ -56,7 +57,25 @@ export function OidcCallbackPage() {
       } catch (err) {
         console.error("OIDC callback:", err);
         if (!cancelled) {
-          setError(formatPbError(err, "Logowanie OIDC nie powiodło się."));
+          let msg = formatPbError(err, "Logowanie OIDC nie powiodło się.");
+          if (err instanceof ClientResponseError) {
+            const api = (err.response as { message?: string; data?: unknown })?.message;
+            if (api && api.startsWith("OIDC:")) msg = api;
+            const data = (err.response as { data?: Record<string, unknown> })?.data;
+            if (data && typeof data === "object") {
+              const detail = Object.entries(data)
+                .filter(([k]) => k !== "code")
+                .map(([k, v]) => {
+                  if (v && typeof v === "object" && "message" in v) {
+                    return `${k}: ${(v as { message: string }).message}`;
+                  }
+                  return `${k}: ${String(v)}`;
+                })
+                .join(" · ");
+              if (detail) msg += ` (${detail})`;
+            }
+          }
+          setError(msg);
         }
       }
     }

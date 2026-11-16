@@ -88,14 +88,27 @@ function fillRecordOidcFields(record, oauth2User, createData) {
 
 onRecordAuthWithOAuth2Request((e) => {
   try {
+    $app.logger().info(
+      "[oauth_users] auth-with-oauth2",
+      "provider",
+      e.providerName || "",
+      "new",
+      String(!e.record),
+      "hasOAuth2User",
+      String(!!e.oauth2User)
+    );
     if (e.oauth2User) {
       const raw = oauthRawUser(e.oauth2User);
-      console.log(
-        "[oauth_users] auth",
-        "sub=" + oidcStr(raw.sub),
-        "email=" + oidcStr(raw.email),
-        "verified=" + String(raw.email_verified),
-        "new=" + String(!e.record)
+      $app.logger().info(
+        "[oauth_users] userinfo",
+        "sub",
+        oidcStr(raw.sub),
+        "email",
+        oidcStr(raw.email),
+        "verified",
+        String(raw.email_verified),
+        "pbEmail",
+        oidcStr(e.oauth2User.email)
       );
       ensureOauth2Email(e.oauth2User);
       if (e.record) {

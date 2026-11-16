@@ -34,7 +34,9 @@ chmod +x scripts/push-to-git.sh
 
 1. Załóż **puste** repozytorium na GitHubie lub GitLabie (bez README).
 2. Skrypt zainicjuje git, zrobi commit i poprosi o adres HTTPS (`git clone` z UI).
-3. Przy kolejnych zmianach: ponownie `./scripts/push-to-git.sh` albo `git add -A && git commit -m "…" && git push`.
+3. **GitHub nie przyjmuje hasła do konta** przy `git push`. Albo **SSH** (`./scripts/push-to-git.sh --ssh` + klucz dodany w GitHub → Settings → SSH keys), albo **Personal access token** zamiast hasła przy HTTPS.
+4. Uruchamiaj `bash scripts/push-to-git.sh` (nie `sh`).
+5. Przy kolejnych zmianach: ponownie `./scripts/push-to-git.sh` albo `git add -A && git commit -m "…" && git push`.
 
 **Cursor (repozytorium prywatne w Cursor):**
 

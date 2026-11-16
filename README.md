@@ -147,6 +147,7 @@ Ogólny komunikat z `auth-with-oauth2` (w DevTools często bez szczegółów w `
 | Brak `email_verified: true` | Własny scope mapping `email` w Authentik (od 2025.10) |
 | Hook PB nie wdrożony | `docker compose build pocketbase && docker compose up -d pocketbase` |
 | Wyłączona rejestracja OAuth | `users` → OAuth2 włączone; create rule nie blokuje sign-up |
+| `verified: Values don't match` | PB ≥0.23: nie wywołuj `setVerified` w `onRecordCreateRequest` (patrz hook `oauth_users.pb.js`) |
 
 Na serwerze: `./scripts/diagnose-oidc.sh twoja-domena.pl` oraz `docker logs ktonazmianie-pocketbase --tail 80`.
 

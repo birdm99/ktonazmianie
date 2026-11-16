@@ -112,7 +112,12 @@ onRecordAuthWithOAuth2Request((e) => {
 
     ensureOauth2Email(oauth2User);
     if (e.record) fillRecordOidcFields(e.record, oauth2User, null);
-    if (e.createData) fillRecordOidcFields(null, oauth2User, e.createData);
+    if (e.createData) {
+      fillRecordOidcFields(null, oauth2User, e.createData);
+      // PB 0.23+: verified w createData / setVerified w onRecordCreateRequest → validation_values_mismatch
+      delete e.createData.verified;
+      delete e.createData.email_verified;
+    }
 
     if (!e.record) {
       const dataEmail = e.createData ? oidcStr(String(e.createData.email || "")) : "";
@@ -162,7 +167,7 @@ onRecordCreateRequest((e) => {
     record.set("firstName", email.split("@")[0] || "Użytkownik");
   }
   if (!oidcStr(record.get("lastName"))) record.set("lastName", "-");
-  if (oidcStr(record.email()) && !record.verified()) record.setVerified(true);
+  // Nie ustawiaj verified tutaj (onRecordCreateRequest jest przed walidacją w PB ≥0.23).
 
   e.next();
 }, "users");

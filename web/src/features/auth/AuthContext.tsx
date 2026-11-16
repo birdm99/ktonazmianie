@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginWithOidc = useCallback(async (returnTo = "/") => {
+    pb.authStore.clear();
     const methods = await pb.collection("users").listAuthMethods();
     const provider = methods.oauth2?.providers?.find((p) => p.name === "oidc");
     if (!provider?.authURL || !provider.codeVerifier) {

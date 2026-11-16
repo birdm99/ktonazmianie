@@ -37,4 +37,6 @@ docker exec "$C" sh -c 'command -v sqlite3 >/dev/null && sqlite3 /pb_data/data.d
 echo ""
 echo "Panel PB: Collections → users → API Rules → Create musi pozwalać na rejestrację (pusta reguła = wszyscy)."
 echo "Settings → Application → włącz rejestrację użytkowników, jeśli jest taka opcja."
-echo "Logi żądań: panel PB → Logs (filtrowanie POST auth-with-oauth2)."
+echo "Po próbie OIDC:"
+echo "  docker logs $C 2>&1 | grep oauth_users | tail -5"
+echo "Logi żądań: panel PB → Logs (POST auth-with-oauth2)."

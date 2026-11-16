@@ -39,6 +39,7 @@ export function OidcCallbackPage() {
       const redirectUri = oidcRedirectUri();
 
       try {
+        pb.authStore.clear();
         await pb.collection("users").authWithOAuth2Code(
           "oidc",
           code,

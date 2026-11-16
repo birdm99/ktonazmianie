@@ -104,9 +104,30 @@ onRecordAuthWithOAuth2Request((e) => {
       if (e.createData) {
         fillRecordOidcFields(null, e.oauth2User, e.createData);
       }
+
+      if (!e.record && e.oauth2User) {
+        const dataEmail = e.createData ? oidcStr(String(e.createData.email || "")) : "";
+        const email = dataEmail || oidcEmail(e.oauth2User);
+        if (!email) {
+          throw new BadRequestError(
+            "OIDC: brak email w odpowiedzi Authentik. W providerze PocketBase (oidc) scope: openid email profile; w Authentik własny scope mapping email z email_verified: True."
+          );
+        }
+        if (e.createData) {
+          const fn = oidcStr(String(e.createData.firstName || ""));
+          const ln = oidcStr(String(e.createData.lastName || ""));
+          if (!fn || !ln) {
+            throw new BadRequestError(
+              "OIDC: brak imienia/nazwiska w userinfo (given_name, family_name lub name w scope profile)."
+            );
+          }
+        }
+      }
     }
   } catch (err) {
-    // Nie przerywaj OAuth — inaczej PB zwraca ogólne „Failed to authenticate.”
+    if (typeof BadRequestError !== "undefined" && err instanceof BadRequestError) {
+      throw err;
+    }
     console.error("oauth_users onRecordAuthWithOAuth2Request:", err);
   }
   e.next();

@@ -4,13 +4,20 @@ function oidcStr(v) {
   return typeof v === "string" ? v.trim() : "";
 }
 
+function oauthRawUser(oauth2User) {
+  if (!oauth2User || typeof oauth2User !== "object") return {};
+  const raw = oauth2User.rawUser;
+  if (raw && typeof raw === "object") return raw;
+  return {};
+}
+
 function namesFromOidc(oauth2User) {
-  const raw = oauth2User?.rawUser || {};
+  const raw = oauthRawUser(oauth2User);
   let firstName = oidcStr(raw.given_name);
   let lastName = oidcStr(raw.family_name);
 
   if (!firstName && !lastName) {
-    const full = oidcStr(raw.name) || oidcStr(oauth2User?.name);
+    const full = oidcStr(raw.name) || oidcStr(oauth2User.name);
     if (full) {
       const parts = full.split(/\s+/).filter(Boolean);
       firstName = parts[0] || "";
@@ -19,60 +26,60 @@ function namesFromOidc(oauth2User) {
   }
 
   if (!firstName) {
-    const email = oidcStr(oauth2User?.email) || oidcStr(raw.email);
+    const email = oidcStr(oauth2User.email) || oidcStr(raw.email);
     const local = email.split("@")[0];
     firstName = local || oidcStr(raw.preferred_username) || "Użytkownik";
   }
-  if (!lastName) lastName = "—";
+  if (!lastName) lastName = "-";
 
   return { firstName, lastName };
 }
 
-function applyOidcUserFields(record, oauth2User, createData) {
+function putCreateField(createData, key, value) {
+  if (!createData || value === "" || value === null || value === undefined) return;
+  const cur = createData[key];
+  if (cur === undefined || cur === null || oidcStr(String(cur)) === "") {
+    createData[key] = value;
+  }
+}
+
+function fillRecordOidcFields(record, oauth2User, createData) {
   const { firstName, lastName } = namesFromOidc(oauth2User);
-  const raw = oauth2User?.rawUser || {};
-  const email = oidcStr(oauth2User?.email) || oidcStr(raw.email);
+  const raw = oauthRawUser(oauth2User);
+  const email = oidcStr(oauth2User.email) || oidcStr(raw.email);
 
-  const set = (key, value) => {
-    if (!value) return;
-    if (createData && !oidcStr(createData[key])) createData[key] = value;
-    if (record && !oidcStr(record.get(key))) record.set(key, value);
-  };
+  if (record) {
+    if (!oidcStr(record.get("firstName"))) record.set("firstName", firstName);
+    if (!oidcStr(record.get("lastName"))) record.set("lastName", lastName);
+    if (!oidcStr(record.get("role"))) record.set("role", "employee");
+    if (email && !oidcStr(record.email())) record.setEmail(email);
+  }
 
-  set("firstName", firstName);
-  set("lastName", lastName);
-  set("role", "employee");
-
-  if (email) {
-    if (createData && !oidcStr(createData.email)) createData.email = email;
-    if (record && !oidcStr(record.email())) record.setEmail(email);
+  if (createData) {
+    putCreateField(createData, "firstName", firstName);
+    putCreateField(createData, "lastName", lastName);
+    putCreateField(createData, "role", "employee");
+    if (email) putCreateField(createData, "email", email);
   }
 }
 
 onRecordAuthWithOAuth2Request((e) => {
-  if (!e.oauth2User) {
-    e.next();
-    return;
+  try {
+    if (e.oauth2User) {
+      if (e.record) {
+        fillRecordOidcFields(e.record, e.oauth2User, null);
+      } else if (e.createData) {
+        fillRecordOidcFields(null, e.oauth2User, e.createData);
+      }
+    }
+  } catch (err) {
+    console.error("oauth_users onRecordAuthWithOAuth2Request:", err);
+    throw new BadRequestError("OIDC: nie udało się uzupełnić profilu użytkownika.", err);
   }
-
-  if (!e.createData) e.createData = {};
-
-  if (e.record) {
-    applyOidcUserFields(e.record, e.oauth2User, null);
-  } else {
-    applyOidcUserFields(null, e.oauth2User, e.createData);
-  }
-
   e.next();
 }, "users");
 
 onRecordCreateRequest((e) => {
-  const record = e.record;
-  if (record.get("role") && record.get("firstName") && record.get("lastName")) {
-    e.next();
-    return;
-  }
-
   let info;
   try {
     info = e.requestInfo();
@@ -86,13 +93,13 @@ onRecordCreateRequest((e) => {
     return;
   }
 
-  if (!record.get("role")) record.set("role", "employee");
-  if (!record.get("firstName")) {
+  const record = e.record;
+  if (!oidcStr(record.get("role"))) record.set("role", "employee");
+  if (!oidcStr(record.get("firstName"))) {
     const email = oidcStr(record.email());
-    const local = email.split("@")[0];
-    record.set("firstName", local || "Użytkownik");
+    record.set("firstName", email.split("@")[0] || "Użytkownik");
   }
-  if (!record.get("lastName")) record.set("lastName", "—");
+  if (!oidcStr(record.get("lastName"))) record.set("lastName", "-");
 
   e.next();
 }, "users");

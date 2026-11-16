@@ -132,7 +132,22 @@ Domyślnie działa logowanie **e-mail + hasło**. SSO włączasz tylko gdy potrz
    docker compose build web && docker compose up -d
    ```
 
-5. W PocketBase **Settings → Application** ustaw **Application URL** na publiczny adres API (spójny z redirect URI).
+5. W PocketBase **Settings → Application** ustaw **Application URL** na publiczny adres aplikacji **bez** `/api` (np. `https://grafik.firma.pl` — ten sam origin co w przeglądarce).
+
+### Błąd „Failed to authenticate” (HTTP 400)
+
+Ogólny komunikat z `auth-with-oauth2` (w DevTools często bez szczegółów w `data`) zwykle oznacza:
+
+| Przyczyna | Co sprawdzić |
+|-----------|----------------|
+| Zły **Application URL** w PB | Musi być `https://domena`, nie `127.0.0.1:8091` ani `…/api` |
+| Redirect w Authentik | Dokładnie `https://domena/api/oauth2-redirect` |
+| Token / userinfo | Client ID/secret, URL-e Authentik, scope `openid profile email` |
+| Brak `email_verified: true` | Własny scope mapping `email` w Authentik (od 2025.10) |
+| Hook PB nie wdrożony | `docker compose build pocketbase && docker compose up -d pocketbase` |
+| Wyłączona rejestracja OAuth | `users` → OAuth2 włączone; create rule nie blokuje sign-up |
+
+Na serwerze: `./scripts/diagnose-oidc.sh twoja-domena.pl` oraz `docker logs ktonazmianie-pocketbase --tail 80`.
 
 [Wytyczna integracji Authentik ↔ PocketBase](https://integrations.goauthentik.io/platforms/pocketbase/)
 

@@ -14,14 +14,28 @@ function fieldErrors(data: Record<string, unknown>): string | null {
 export function formatPbError(err: unknown, fallback: string): string {
   if (!(err instanceof ClientResponseError)) return fallback;
 
-  const data = err.response?.data as Record<string, unknown> | undefined;
+  const raw = err.response as Record<string, unknown> | undefined;
+  const data = (raw?.data ?? err.data) as Record<string, unknown> | undefined;
   if (data) {
     const fromFields = fieldErrors(data);
     if (fromFields) return fromFields;
+    const nested = data.data;
+    if (nested && typeof nested === "object" && !Array.isArray(nested)) {
+      const fromNested = fieldErrors(nested as Record<string, unknown>);
+      if (fromNested) return fromNested;
+    }
     if (typeof data.message === "string" && data.message) return data.message;
   }
 
-  const msg = err.response?.message;
+  const msg =
+    (typeof raw?.message === "string" ? raw.message : undefined) ?? err.message;
+  if (msg === "Failed to authenticate.") {
+    return (
+      "Logowanie OIDC nie powiodło się (PocketBase 400). " +
+      "Sprawdź: Application URL = publiczna domena, redirect w Authentik, " +
+      "scope email z email_verified, provider „oidc” w PB, oraz docker logs pocketbase."
+    );
+  }
   if (msg && msg !== "Something went wrong while processing your request.") {
     return msg;
   }

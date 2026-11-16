@@ -54,7 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginWithOidc = useCallback(async () => {
-    await pb.collection("users").authWithOAuth2({ provider: "oidc" });
+    await pb.collection("users").authWithOAuth2({
+      provider: "oidc",
+      createData: { role: "employee" },
+    });
     setUser(pb.authStore.record as User);
   }, []);
 

@@ -52,6 +52,7 @@ export function OidcCallbackPage() {
         sessionStorage.removeItem(OIDC_RETURN_KEY);
         navigate(returnTo, { replace: true });
       } catch (err) {
+        console.error("OIDC callback:", err);
         if (!cancelled) {
           setError(formatPbError(err, "Logowanie OIDC nie powiodło się."));
         }

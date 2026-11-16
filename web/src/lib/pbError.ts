@@ -29,19 +29,18 @@ export function formatPbError(err: unknown, fallback: string): string {
 
   const msg =
     (typeof raw?.message === "string" ? raw.message : undefined) ?? err.message;
-  if (msg === "Failed to authenticate.") {
+  if (msg === "Failed to authenticate." || msg === "Failed to create record.") {
     const origin =
       typeof window !== "undefined" ? window.location.origin.replace(/\/$/, "") : "";
-    const appUrlHint = origin
-      ? `W panelu PB ustaw Application URL na ${origin} (bez /api). `
-      : "";
-    return (
-      "Logowanie OIDC nie powiodło się (PocketBase 400). " +
-      appUrlHint +
-      "Sprawdź redirect w Authentik ({domena}/api/oauth2-redirect), scope email z email_verified: true, " +
-      "oraz: docker logs ktonazmianie-pocketbase --tail 50. " +
-      "Na serwerze: APP_URL=… ./scripts/fix-pb-app-url.sh superuser@mail haslo"
-    );
+    return [
+      "Logowanie OIDC nie powiodło się (PocketBase).",
+      origin
+        ? `Sprawdź: Application URL = ${origin}; Authentik redirect = ${origin}/oauth2-callback.`
+        : "Sprawdź Application URL i redirect /oauth2-callback w Authentik.",
+      "Authentik: własny scope „email” z email_verified: True (domyślny od 2025.10 ma false).",
+      "Serwer: docker compose build pocketbase && docker compose up -d pocketbase (hook oauth_users).",
+      "Logi: docker logs ktonazmianie-pocketbase --tail 50",
+    ].join(" ");
   }
   if (msg && msg !== "Something went wrong while processing your request.") {
     return msg;

@@ -43,10 +43,33 @@ function putCreateField(createData, key, value) {
   }
 }
 
+function oidcEmail(oauth2User) {
+  const raw = oauthRawUser(oauth2User);
+  return oidcStr(oauth2User.email) || oidcStr(raw.email);
+}
+
+/** PB mapuje email z OIDC tylko gdy email_verified jest truthy — uzupełniamy ręcznie z userinfo. */
+function ensureOauth2Email(oauth2User) {
+  if (!oauth2User) return;
+  const raw = oauthRawUser(oauth2User);
+  const email = oidcEmail(oauth2User);
+  if (!email) return;
+  try {
+    oauth2User.email = email;
+  } catch (_) {
+    /* ignore */
+  }
+  const verified = raw.email_verified;
+  if (verified === false || verified === "false") {
+    console.warn(
+      "oauth_users: Authentik zwraca email_verified=false — rozważ własny scope mapping email w Authentik."
+    );
+  }
+}
+
 function fillRecordOidcFields(record, oauth2User, createData) {
   const { firstName, lastName } = namesFromOidc(oauth2User);
-  const raw = oauthRawUser(oauth2User);
-  const email = oidcStr(oauth2User.email) || oidcStr(raw.email);
+  const email = oidcEmail(oauth2User);
 
   if (record) {
     if (!oidcStr(record.get("firstName"))) record.set("firstName", firstName);
@@ -66,9 +89,11 @@ function fillRecordOidcFields(record, oauth2User, createData) {
 onRecordAuthWithOAuth2Request((e) => {
   try {
     if (e.oauth2User) {
+      ensureOauth2Email(e.oauth2User);
       if (e.record) {
         fillRecordOidcFields(e.record, e.oauth2User, null);
-      } else if (e.createData) {
+      }
+      if (e.createData) {
         fillRecordOidcFields(null, e.oauth2User, e.createData);
       }
     }
@@ -100,6 +125,9 @@ onRecordCreateRequest((e) => {
     record.set("firstName", email.split("@")[0] || "Użytkownik");
   }
   if (!oidcStr(record.get("lastName"))) record.set("lastName", "-");
+  if (oidcStr(record.email()) && !record.verified()) {
+    record.setVerified(true);
+  }
 
   e.next();
 }, "users");

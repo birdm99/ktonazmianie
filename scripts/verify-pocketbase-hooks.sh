@@ -34,11 +34,14 @@ docker exec "$C" sh -c 'ls /pb_migrations/*.js 2>/dev/null | wc -l'
 echo "--- users.createRule (SQLite) ---"
 docker exec "$C" sh -c 'command -v sqlite3 >/dev/null && sqlite3 /pb_data/data.db "SELECT name, createRule FROM _collections WHERE name='\''users'\'';" 2>/dev/null || echo "sqlite3 niedostępny — sprawdź Create rule w panelu PB"'
 
+echo "--- Ostatnie logi żądań (auxiliary.db → _logs) ---"
+docker exec "$C" sh -c 'sqlite3 /pb_data/auxiliary.db "SELECT datetime(created), message, substr(data,1,120) FROM _logs WHERE message LIKE '\''%auth-with-oauth2%'\'' OR message LIKE '\''%oauth_users%'\'' ORDER BY created DESC LIMIT 5;" 2>/dev/null || echo "Brak tabeli _logs (włącz logi w panelu PB → Logs)"'
+
 echo ""
 echo "Panel PB: Collections → users → API Rules → Create musi pozwalać na rejestrację (pusta reguła = wszyscy)."
 echo "Settings → Application → włącz rejestrację użytkowników, jeśli jest taka opcja."
 echo "Po próbie OIDC (INFO trafia do logów PB, nie zawsze do stdout):"
 echo "  docker logs $C 2>&1 | grep oauth_users | tail -10"
-echo "  docker exec $C sqlite3 /pb_data/data.db \"SELECT id, level, message, data FROM _logs WHERE message LIKE '%oauth2%' OR message LIKE '%oauth_users%' ORDER BY rowid DESC LIMIT 5;\""
+echo "  docker exec $C sqlite3 /pb_data/auxiliary.db \"SELECT datetime(created), message, data FROM _logs WHERE message LIKE '%auth-with-oauth2%' ORDER BY created DESC LIMIT 5;\""
 echo "Logi żądań: panel PB → Logs (POST auth-with-oauth2)."
 echo "Authentik email: docs/authentik-oidc-email.md"

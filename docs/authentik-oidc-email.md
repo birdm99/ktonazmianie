@@ -5,8 +5,8 @@ PocketBase **nie przypisuje** `email` z OIDC, jeśli w userinfo jest `email_veri
 ## 1. Scope mapping `email`
 
 1. Authentik → **Customization** → **Property Mappings** → **Create** → **Scope Mapping**
-2. Name: np. `PocketBase email verified`
-3. Scope name: `email` (dokładnie)
+2. **Name** (etykieta w UI): dowolna, np. `grafikEmail` — to tylko opis
+3. **Scope name** (pole „Scope name” / `scope_name`): musi być dokładnie **`email`**, **nie** `grafikEmail`. PocketBase w żądaniu OAuth prosi o scope `email`, nie o własną nazwę mapowania
 4. Expression:
 
 ```python
@@ -44,3 +44,8 @@ https://grafik.naszdzial.it/oauth2-callback
 - Ponów logowanie OIDC
 - Logi PB (po rebuildzie obrazu z hookiem): `docker logs ktonazmianie-pocketbase 2>&1 | grep oauth_users`
 - Panel PB → **Logs** → `POST auth-with-oauth2`
+- SQL (logi są w **auxiliary.db**, nie w data.db):
+  ```bash
+  docker exec ktonazmianie-pocketbase sqlite3 /pb_data/auxiliary.db \
+    "SELECT datetime(created), message, substr(data,1,200) FROM _logs WHERE message LIKE '%auth-with-oauth2%' ORDER BY created DESC LIMIT 5;"
+  ```

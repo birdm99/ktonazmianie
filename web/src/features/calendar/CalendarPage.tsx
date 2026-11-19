@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { pb } from "@/lib/pocketbase";
@@ -17,7 +17,18 @@ import { useAuth } from "../auth/AuthContext";
 import { CalendarHeader } from "./CalendarHeader";
 import { CalendarPeriodNav } from "./CalendarPeriodNav";
 import { CalendarGrid } from "./CalendarGrid";
+import { CalendarMobileList } from "./CalendarMobileList";
 import { ShiftDialog } from "../shifts/ShiftDialog";
+
+const MOBILE_LAYOUT_KEY = "ktoNaZmianie.mobileCalendarLayout";
+
+function readMobileLayoutPref(): boolean {
+  try {
+    return localStorage.getItem(MOBILE_LAYOUT_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 export function CalendarPage() {
   const { user } = useAuth();
@@ -35,6 +46,15 @@ export function CalendarPage() {
 
   const [anchor, setAnchor] = useState(() => new Date());
   const [view, setView] = useState<CalendarView>("month");
+  const [mobileLayout, setMobileLayout] = useState(readMobileLayoutPref);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(MOBILE_LAYOUT_KEY, mobileLayout ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [mobileLayout]);
   const [filterUserQuery, setFilterUserQuery] = useState("");
   const [filterTypeId, setFilterTypeId] = useState("");
   const [dialog, setDialog] = useState<{
@@ -168,18 +188,35 @@ export function CalendarPage() {
           onPrev={() => setAnchor((d) => shiftAnchor(d, view, -1))}
           onNext={() => setAnchor((d) => shiftAnchor(d, view, 1))}
           onPrint={() => window.print()}
+          mobileLayout={mobileLayout}
+          onMobileLayoutChange={setMobileLayout}
         />
-        <CalendarGrid
-          days={days}
-          users={filteredUsers}
-          shifts={filteredShifts}
-          shiftTypes={shiftTypesMap}
-          holidays={holidays}
-          view={view}
-          currentUserId={user?.id ?? ""}
-          isAdmin={canManageShifts}
-          onCellClick={onCellClick}
-        />
+        {mobileLayout ? (
+          <CalendarMobileList
+            days={days}
+            users={filteredUsers}
+            shifts={filteredShifts}
+            shiftTypes={shiftTypesMap}
+            holidays={holidays}
+            view={view}
+            currentUserId={user?.id ?? ""}
+            isAdmin={canManageShifts}
+            onCellClick={onCellClick}
+          />
+        ) : null}
+        <div className={mobileLayout ? "hidden print:block" : undefined}>
+          <CalendarGrid
+            days={days}
+            users={filteredUsers}
+            shifts={filteredShifts}
+            shiftTypes={shiftTypesMap}
+            holidays={holidays}
+            view={view}
+            currentUserId={user?.id ?? ""}
+            isAdmin={canManageShifts}
+            onCellClick={onCellClick}
+          />
+        </div>
       </main>
       <ShiftDialog
         open={!!dialog}

@@ -7,9 +7,19 @@ export interface CalendarPeriodNavProps {
   onPrev: () => void;
   onNext: () => void;
   onPrint?: () => void;
+  mobileLayout?: boolean;
+  onMobileLayoutChange?: (value: boolean) => void;
 }
 
-export function CalendarPeriodNav({ anchor, view, onPrev, onNext, onPrint }: CalendarPeriodNavProps) {
+export function CalendarPeriodNav({
+  anchor,
+  view,
+  onPrev,
+  onNext,
+  onPrint,
+  mobileLayout = false,
+  onMobileLayoutChange,
+}: CalendarPeriodNavProps) {
   const title = formatPeriodTitle(anchor, view);
 
   return (
@@ -36,6 +46,24 @@ export function CalendarPeriodNav({ anchor, view, onPrev, onNext, onPrint }: Cal
       >
         →
       </button>
+      {onMobileLayoutChange ? (
+        <button
+          type="button"
+          className="btn-secondary h-10 shrink-0 px-3 text-sm font-semibold text-slate-800 sm:px-4"
+          onClick={() => onMobileLayoutChange(!mobileLayout)}
+          aria-pressed={mobileLayout}
+          title={
+            mobileLayout
+              ? "Wróć do klasycznej tabeli (lepsza na dużym ekranie)"
+              : "Lista dni — czytelny widok na telefonie"
+          }
+        >
+          <span className="sm:hidden">{mobileLayout ? "Tabela" : "Lista"}</span>
+          <span className="hidden sm:inline">
+            {mobileLayout ? "Widok tabeli" : "Widok mobilny"}
+          </span>
+        </button>
+      ) : null}
       {onPrint ? (
         <button
           type="button"
